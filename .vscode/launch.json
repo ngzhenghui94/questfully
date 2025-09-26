@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:questfully}/server/api",
+            "name": "Debug api (server/api)",
+            "program": "${workspaceFolder:questfully}/server/api/.build/debug/api",
+            "preLaunchTask": "swift: Build Debug api (server/api)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:questfully}/server/api",
+            "name": "Release api (server/api)",
+            "program": "${workspaceFolder:questfully}/server/api/.build/release/api",
+            "preLaunchTask": "swift: Build Release api (server/api)"
+        }
+    ]
+}
