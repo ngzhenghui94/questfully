@@ -3,34 +3,43 @@ import Combine
 
 class CategoryViewModel: ObservableObject {
     @Published var categories: [Category] = []
-    @Published var questions: [String: [Question]] = [:]
+    @Published var questions: [UUID: [Question]] = [:]
+    private var apiService = APIService()
 
     init() {
-        loadMockData()
+        fetchCategories()
     }
 
-    func loadMockData() {
-        // Mock data for categories
-        self.categories = [
-            Category(id: "1", name: "Deep Questions", color: "8E44AD"),
-            Category(id: "2", name: "Faith & Beliefs", color: "3498DB"),
-            Category(id: "3", name: "Silly Questions", color: "2ECC71"),
-            Category(id: "4", name: "Relationship", color: "E74C3C"),
-            Category(id: "5", name: "Self-Reflection", color: "F1C40F")
-        ]
-        
-        // Mock data for questions, grouped by category
-        self.questions = [
-            "1": [
-                Question(id: "q1", text: "What is a belief you hold with which many people disagree?", categoryId: "1"),
-                Question(id: "q2", text: "What is the most important lesson you've learned in life?", categoryId: "1")
-            ],
-            "2": [
-                Question(id: "q3", text: "If love is real do you think it points to something bigger than biology?", categoryId: "2")
-            ],
-            "3": [],
-            "4": [],
-            "5": []
-        ]
+    func fetchCategories() {
+        apiService.fetchCategories { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let categories):
+                    self?.categories = categories
+                    categories.forEach { category in
+                        self?.fetchQuestions(for: category)
+                    }
+                case .failure(let error):
+                    print("Error fetching categories: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    func fetchQuestions(for category: Category) {
+        guard let categoryID = category.id else {
+            print("Category ID is nil")
+            return
+        }
+        apiService.fetchQuestions(for: categoryID) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let questions):
+                    self?.questions[categoryID] = questions
+                case .failure(let error):
+                    print("Error fetching questions for category \(category.name): \(error.localizedDescription)")
+                }
+            }
+        }
     }
 }
