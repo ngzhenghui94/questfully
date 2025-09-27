@@ -3,13 +3,45 @@ import Foundation
 class APIService {
     let baseURL = "http://127.0.0.1:8080"
 
+    private lazy var decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return decoder
+    }()
+
+    private lazy var encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
+    }()
+
+    private var sessionToken: String?
+
+    func updateSessionToken(_ token: String?) {
+        sessionToken = token
+    }
+
+    private func buildRequest(url: URL, method: String = "GET", body: Data? = nil) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        if let body = body {
+            request.httpBody = body
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+        if let token = sessionToken {
+            request.addValue(token, forHTTPHeaderField: "X-Session-Token")
+        }
+        return request
+    }
+
     func fetchFavorites(deviceId: String, completion: @escaping (Result<[Question], Error>) -> Void) {
         guard let url = URL(string: "\(baseURL)/favorites/\(deviceId)") else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
             return
         }
 
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        let request = buildRequest(url: url)
+        URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -21,7 +53,7 @@ class APIService {
             }
 
             do {
-                let questions = try JSONDecoder().decode([Question].self, from: data)
+                let questions = try self.decoder.decode([Question].self, from: data)
                 completion(.success(questions))
             } catch {
                 completion(.failure(error))
@@ -35,30 +67,25 @@ class APIService {
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-
         let payload: [String: Any] = [
             "deviceId": deviceId,
             "questionId": questionId.uuidString
         ]
 
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: payload, options: [])
+            let body = try JSONSerialization.data(withJSONObject: payload, options: [])
+            let request = buildRequest(url: url, method: "POST", body: body)
+            URLSession.shared.dataTask(with: request) { _, _, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                completion(.success(()))
+            }.resume()
         } catch {
             completion(.failure(error))
-            return
         }
-
-        URLSession.shared.dataTask(with: request) { _, _, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-
-            completion(.success(()))
-        }.resume()
     }
 
     func removeFavorite(deviceId: String, questionId: UUID, completion: @escaping (Result<Void, Error>) -> Void) {
@@ -67,30 +94,25 @@ class APIService {
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-
         let payload: [String: Any] = [
             "deviceId": deviceId,
             "questionId": questionId.uuidString
         ]
 
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: payload, options: [])
+            let body = try JSONSerialization.data(withJSONObject: payload, options: [])
+            let request = buildRequest(url: url, method: "DELETE", body: body)
+            URLSession.shared.dataTask(with: request) { _, _, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                completion(.success(()))
+            }.resume()
         } catch {
             completion(.failure(error))
-            return
         }
-
-        URLSession.shared.dataTask(with: request) { _, _, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-
-            completion(.success(()))
-        }.resume()
     }
 
     func fetchCategories(completion: @escaping (Result<[Category], Error>) -> Void) {
@@ -99,7 +121,8 @@ class APIService {
             return
         }
 
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        let request = buildRequest(url: url)
+        URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -111,12 +134,20 @@ class APIService {
             }
 
             do {
-                let categories = try JSONDecoder().decode([Category].self, from: data)
+                let categories = try self.decoder.decode([Category].self, from: data)
                 completion(.success(categories))
             } catch {
                 completion(.failure(error))
             }
         }.resume()
+    }
+
+    func fetchCategories() async -> Result<[Category], Error> {
+        await withCheckedContinuation { continuation in
+            fetchCategories { result in
+                continuation.resume(returning: result)
+            }
+        }
     }
 
     func fetchQuestions(for categoryID: UUID, completion: @escaping (Result<[Question], Error>) -> Void) {
@@ -125,7 +156,8 @@ class APIService {
             return
         }
 
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        let request = buildRequest(url: url)
+        URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -137,12 +169,20 @@ class APIService {
             }
 
             do {
-                let questions = try JSONDecoder().decode([Question].self, from: data)
+                let questions = try self.decoder.decode([Question].self, from: data)
                 completion(.success(questions))
             } catch {
                 completion(.failure(error))
             }
         }.resume()
+    }
+
+    func fetchQuestions(for categoryID: UUID) async -> Result<[Question], Error> {
+        await withCheckedContinuation { continuation in
+            fetchQuestions(for: categoryID) { result in
+                continuation.resume(returning: result)
+            }
+        }
     }
 
     func fetchStats(completion: @escaping (Result<AppStats, Error>) -> Void) {
@@ -151,7 +191,8 @@ class APIService {
             return
         }
 
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        let request = buildRequest(url: url)
+        URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -163,12 +204,20 @@ class APIService {
             }
 
             do {
-                let stats = try JSONDecoder().decode(AppStats.self, from: data)
+                let stats = try self.decoder.decode(AppStats.self, from: data)
                 completion(.success(stats))
             } catch {
                 completion(.failure(error))
             }
         }.resume()
+    }
+
+    func fetchStats() async -> Result<AppStats, Error> {
+        await withCheckedContinuation { continuation in
+            fetchStats { result in
+                continuation.resume(returning: result)
+            }
+        }
     }
 
     func fetchQuestionCount(for categoryID: UUID, completion: @escaping (Result<Int, Error>) -> Void) {
@@ -177,7 +226,8 @@ class APIService {
             return
         }
 
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        let request = buildRequest(url: url)
+        URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -189,7 +239,7 @@ class APIService {
             }
 
             do {
-                let countResponse = try JSONDecoder().decode(CountResponse.self, from: data)
+                let countResponse = try self.decoder.decode(CountResponse.self, from: data)
                 completion(.success(countResponse.count))
             } catch {
                 completion(.failure(error))
@@ -197,7 +247,145 @@ class APIService {
         }.resume()
     }
 
+    func fetchProfile(completion: @escaping (Result<UserProfile, Error>) -> Void) {
+        guard let url = URL(string: "\(baseURL)/profile") else {
+            completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
+            return
+        }
+
+        let request = buildRequest(url: url)
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let data = data else {
+                completion(.failure(NSError(domain: "No data", code: -1, userInfo: nil)))
+                return
+            }
+
+            do {
+                let profile = try self.decoder.decode(UserProfile.self, from: data)
+                completion(.success(profile))
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+
+    func updateProfile(_ profile: UserProfileUpdate, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let url = URL(string: "\(baseURL)/profile") else {
+            completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
+            return
+        }
+
+        do {
+            let body = try encoder.encode(profile)
+            let request = buildRequest(url: url, method: "POST", body: body)
+            URLSession.shared.dataTask(with: request) { _, _, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                completion(.success(()))
+            }.resume()
+        } catch {
+            completion(.failure(error))
+        }
+    }
+
+    func signInWithApple(identityToken: String, authorizationCode: String, fullName: String?, completion: @escaping (Result<AuthResponse, Error>) -> Void) {
+        guard let url = URL(string: "\(baseURL)/auth/apple") else {
+            completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
+            return
+        }
+
+        let payload = AppleSignInRequest(identityToken: identityToken, authorizationCode: authorizationCode, fullName: fullName)
+
+        do {
+            let body = try encoder.encode(payload)
+            let request = buildRequest(url: url, method: "POST", body: body)
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                guard let data = data else {
+                    completion(.failure(NSError(domain: "No data", code: -1, userInfo: nil)))
+                    return
+                }
+
+                do {
+                    let authResponse = try self.decoder.decode(AuthResponse.self, from: data)
+                    completion(.success(authResponse))
+                } catch {
+                    completion(.failure(error))
+                }
+            }.resume()
+        } catch {
+            completion(.failure(error))
+        }
+    }
+
+    func logout(sessionToken: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let url = URL(string: "\(baseURL)/auth/logout") else {
+            completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
+            return
+        }
+
+        do {
+            let body = try JSONSerialization.data(withJSONObject: ["sessionToken": sessionToken], options: [])
+            let request = buildRequest(url: url, method: "POST", body: body)
+            URLSession.shared.dataTask(with: request) { _, _, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                completion(.success(()))
+            }.resume()
+        } catch {
+            completion(.failure(error))
+        }
+    }
+
     private struct CountResponse: Codable {
         let count: Int
+    }
+
+    struct UserProfile: Codable {
+        let displayName: String?
+        let totalQuestions: Int
+        let totalCategories: Int
+        let totalFavorites: Int
+        let perCategory: [CategoryStats]
+
+        struct CategoryStats: Codable, Identifiable {
+            let categoryId: UUID
+            let totalQuestions: Int
+
+            var id: UUID { categoryId }
+        }
+    }
+
+    struct UserProfileUpdate: Codable {
+        let displayName: String
+    }
+
+    struct AppleSignInRequest: Codable {
+        let identityToken: String
+        let authorizationCode: String
+        let fullName: String?
+    }
+
+    struct AuthResponse: Codable {
+        let success: Bool
+        let userId: String
+        let sessionToken: String
+        let expiresAt: Date
+        let displayName: String?
     }
 }

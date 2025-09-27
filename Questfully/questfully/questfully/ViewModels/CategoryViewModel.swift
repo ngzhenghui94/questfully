@@ -1,7 +1,8 @@
 import Foundation
 import Combine
 
-class CategoryViewModel: ObservableObject {
+@MainActor
+final class CategoryViewModel: ObservableObject {
     @Published var categories: [Category] = []
     @Published var questions: [UUID: [Question]] = [:]
     @Published var stats: AppStats? = nil
@@ -9,64 +10,46 @@ class CategoryViewModel: ObservableObject {
     @Published var viewedCount: Int = 0
     @Published var totalQuestionsForFocusedCategory: Int = 0
     @Published var focusedCategoryID: UUID? = nil
-    private var apiService = APIService()
 
-    init() {
-        fetchCategories()
-        fetchStats()
-    }
+    private let dataStore: ContentDataStore
+    private var cancellables: Set<AnyCancellable> = []
 
-    func fetchCategories() {
-        apiService.fetchCategories { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let categories):
-                    self?.categories = categories
-                    categories.forEach { category in
-                        self?.fetchQuestions(for: category)
-                        self?.fetchQuestionCount(for: category.id)
-                    }
-                case .failure(let error):
-                    print("Error fetching categories: \(error.localizedDescription)")
+    init(dataStore: ContentDataStore? = nil) {
+        let resolvedStore = dataStore ?? ContentDataStore()
+        self.dataStore = resolvedStore
+
+        resolvedStore.$categories
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] categories in
+                self?.categories = categories
+                if self?.focusedCategoryID == nil {
+                    self?.focusedCategoryID = categories.first?.id
                 }
             }
-        }
+            .store(in: &cancellables)
+
+        resolvedStore.$questions
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newQuestions in
+                self?.questions = newQuestions
+                self?.recalculateViewedCount()
+            }
+            .store(in: &cancellables)
+
+        resolvedStore.$stats
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] stats in
+                self?.stats = stats
+                self?.questionCounts = stats?.questionsPerCategory ?? [:]
+                self?.recalculateViewedCount()
+            }
+            .store(in: &cancellables)
+
+        Task { await resolvedStore.refreshContent() }
     }
 
-    func fetchQuestions(for category: Category) {
-        let categoryID = category.id
-        apiService.fetchQuestions(for: categoryID) { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let questions):
-                    let normalizedQuestions = questions.map { question -> Question in
-                        if question.categoryId == categoryID {
-                            return question
-                        }
-                        return Question(id: question.id, text: question.text, categoryId: categoryID)
-                    }
-                    self?.questions[categoryID] = normalizedQuestions
-                    self?.recalculateViewedCount()
-                case .failure(let error):
-                    print("Error fetching questions for category \(category.name): \(error.localizedDescription)")
-                }
-            }
-        }
-    }
-
-    func fetchStats() {
-        apiService.fetchStats { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let stats):
-                    self?.stats = stats
-                    self?.questionCounts = stats.questionsPerCategory
-                    self?.recalculateViewedCount()
-                case .failure(let error):
-                    print("Error fetching stats: \(error.localizedDescription)")
-                }
-            }
-        }
+    func questions(for category: Category) -> [Question] {
+        dataStore.questions(for: category.id)
     }
 
     func updateFocusedCategory(to categoryID: UUID?) {
@@ -97,19 +80,5 @@ class CategoryViewModel: ObservableObject {
         let loadedForCategory = questions[categoryID]?.count ?? totalForCategory
         viewedCount = min(loadedForCategory, totalForCategory)
         totalQuestionsForFocusedCategory = totalForCategory
-    }
-
-    private func fetchQuestionCount(for categoryID: UUID) {
-        apiService.fetchQuestionCount(for: categoryID) { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let count):
-                    self?.questionCounts[categoryID] = count
-                    self?.recalculateViewedCount()
-                case .failure(let error):
-                    print("Error fetching question count for category: \(error.localizedDescription)")
-                }
-            }
-        }
     }
 }

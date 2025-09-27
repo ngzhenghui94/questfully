@@ -46,6 +46,54 @@ COMMENT ON TABLE questions IS 'Stores the individual questions, linked to a cate
 CREATE INDEX IF NOT EXISTS idx_questions_category_id ON questions(category_id);
 
 
+-- -----------------------------------------------------
+-- Table: users
+-- -----------------------------------------------------
+-- Stores application users identified via Sign in with Apple.
+--
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  apple_user_id TEXT NOT NULL UNIQUE,
+  email TEXT,
+  display_name TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+COMMENT ON TABLE users IS 'Stores users authenticated through Sign in with Apple.';
+
+
+-- -----------------------------------------------------
+-- Table: apple_credentials
+-- -----------------------------------------------------
+-- Stores hashed Apple authentication artifacts for auditing/refreshing.
+--
+CREATE TABLE IF NOT EXISTS apple_credentials (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  authorization_code_hash TEXT,
+  identity_token_hash TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+COMMENT ON TABLE apple_credentials IS 'Holds hashed Apple sign-in codes tied to a user.';
+
+
+-- -----------------------------------------------------
+-- Table: user_sessions
+-- -----------------------------------------------------
+-- Stores session tokens issued by the API for authenticated users.
+--
+CREATE TABLE IF NOT EXISTS user_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+
+
 -- ===============================================================
 -- Sample Data (Optional)
 -- ===============================================================

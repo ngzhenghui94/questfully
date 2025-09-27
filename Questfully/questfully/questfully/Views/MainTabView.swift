@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject var favoritesManager: FavoritesManager
+    @EnvironmentObject private var authManager: AuthManager
 
     var body: some View {
         TabView {
@@ -24,7 +25,7 @@ struct MainTabView: View {
                     Text("Decks")
                 }
             
-            Text("Profile View")
+            ProfileView(authManager: authManager)
                 .tabItem {
                     Image(systemName: "person.fill")
                     Text("Profile")
