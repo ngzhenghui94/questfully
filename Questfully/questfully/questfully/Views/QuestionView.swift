@@ -8,106 +8,136 @@ struct QuestionView: View {
     @State private var randomizedQuestions: [Question] = []
     @EnvironmentObject var favoritesManager: FavoritesManager
     @Environment(\.presentationMode) var presentationMode
+    @GestureState private var dragOffset: CGFloat = 0
+
+    private let headerSpacing: CGFloat = 16
 
     var body: some View {
         ZStack {
             Color(hex: category.color).edgesIgnoringSafeArea(.all)
-            
             VStack {
-                // Header
-                HStack {
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Image(systemName: "xmark")
-                            .foregroundColor(.white)
-                            .font(.title2)
-                    }
-                    Spacer()
-                    Button(action: shareQuestion) {
-                        Image(systemName: "square.and.arrow.up")
-                            .foregroundColor(.white)
-                            .font(.title2)
-                    }
-                    Button(action: toggleFavorite) {
-                        if let question = currentQuestion {
-                            Image(systemName: favoritesManager.isFavorited(question) ? "heart.fill" : "heart")
-                                .foregroundColor(favoritesManager.isFavorited(question) ? .red : .white)
-                                .font(.title2)
-                        }
-                    }
-                    .disabled(currentQuestion == nil)
-                    .opacity(currentQuestion == nil ? 0 : 1)
-                    .padding(.leading)
-                }
-                .padding()
-
+                header
                 Spacer()
-
-                // Question Text
-                if let question = currentQuestion {
-                    Text(question.text)
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                } else {
-                    Text("No questions in this category yet.")
-                        .foregroundColor(.white)
-                }
-
-
+                questionContent
+                    .padding(.horizontal)
+                    .gesture(swipeGesture)
                 Spacer()
-
-                // Footer
-                if let question = currentQuestion {
-                    VStack {
-                        // Progress Bar
-                        ProgressView(value: Double(currentIndex + 1), total: Double(questionCount))
-                            .progressViewStyle(LinearProgressViewStyle(tint: .white))
-                            .padding()
-
-                        // Navigation
-                        HStack(alignment: .center) {
-                            Button(action: {
-                                if currentIndex > 0 {
-                                    currentIndex -= 1
-                                }
-                            }) {
-                                Text("Previous")
-                                    .foregroundColor(.white)
-                                    .frame(width: 80, alignment: .leading)
-                            }
-                            .disabled(currentIndex == 0)
-
-                            Spacer(minLength: 0)
-
-                            Text("\(currentIndex + 1) of \(questionCount)")
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity, alignment: .center)
-
-                            Spacer(minLength: 0)
-
-                            Button(action: {
-                                if currentIndex < questionCount - 1 {
-                                    currentIndex += 1
-                                }
-                            }) {
-                                Text("Next")
-                                    .foregroundColor(.white)
-                                    .frame(width: 80, alignment: .trailing)
-                            }
-                            .disabled(currentIndex == questionCount - 1)
-                        }
-                        .padding()
-                    }
-                }
+                footer
             }
         }
         .navigationBarHidden(true)
     }
-    
+
+    private var header: some View {
+        HStack(spacing: headerSpacing) {
+            Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                Image(systemName: "xmark")
+                    .foregroundColor(.white)
+                    .font(.title2)
+            }
+
+            Spacer()
+
+            Button(action: shareQuestion) {
+                Image(systemName: "square.and.arrow.up")
+                    .foregroundColor(.white)
+                    .font(.title2)
+            }
+
+            Button(action: randomizeQuestions) {
+                Image(systemName: "die.face.5")
+                    .foregroundColor(.white)
+                    .font(.title2)
+            }
+
+            Button(action: toggleFavorite) {
+                if let question = currentQuestion {
+                    let isFavorite = favoritesManager.isFavorited(question)
+                    Image(systemName: isFavorite ? "heart.fill" : "heart")
+                        .foregroundColor(isFavorite ? .red : .white)
+                        .font(.title2)
+                } else {
+                    Image(systemName: "heart")
+                        .foregroundColor(.white)
+                        .font(.title2)
+                        .opacity(0)
+                }
+            }
+            .disabled(currentQuestion == nil)
+        }
+        .padding([.horizontal, .top])
+    }
+
+    private var questionContent: some View {
+        Group {
+            if let question = currentQuestion {
+                Text(question.text)
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                    .offset(x: dragOffset)
+                    .animation(.easeInOut(duration: 0.2), value: dragOffset)
+            } else {
+                Text("No questions in this category yet.")
+                    .foregroundColor(.white)
+            }
+        }
+    }
+
+    private var footer: some View {
+        Group {
+            if let _ = currentQuestion {
+                VStack {
+                    ProgressView(value: Double(currentIndex + 1), total: Double(questionCount))
+                        .progressViewStyle(LinearProgressViewStyle(tint: .white))
+                        .padding()
+
+                    HStack {
+                        Button(action: moveToPreviousQuestion) {
+                            Text("Previous")
+                                .foregroundColor(.white)
+                                .frame(width: 100, alignment: .leading)
+                        }
+                        .disabled(currentIndex == 0)
+
+                        Spacer()
+
+                        Text("\(currentIndex + 1) of \(questionCount)")
+                            .foregroundColor(.white)
+
+                        Spacer()
+
+                        Button(action: moveToNextQuestion) {
+                            Text("Next")
+                                .foregroundColor(.white)
+                                .frame(width: 100, alignment: .trailing)
+                        }
+                        .disabled(currentIndex == questionCount - 1)
+                    }
+                    .padding(.horizontal)
+                }
+            }
+        }
+        .padding(.bottom)
+    }
+
+    private var swipeGesture: some Gesture {
+        DragGesture()
+            .updating($dragOffset) { value, state, _ in
+                state = value.translation.width
+            }
+            .onEnded { value in
+                let threshold: CGFloat = 80
+                if value.translation.width < -threshold {
+                    moveToNextQuestion()
+                } else if value.translation.width > threshold {
+                    moveToPreviousQuestion()
+                }
+            }
+    }
+
     private var currentQuestion: Question? {
         guard !randomizedQuestions.isEmpty else {
             return questions.isEmpty ? nil : questions[currentIndex]
@@ -119,16 +149,25 @@ struct QuestionView: View {
         randomizedQuestions.isEmpty ? questions.count : randomizedQuestions.count
     }
 
+    private func moveToPreviousQuestion() {
+        if currentIndex > 0 {
+            currentIndex -= 1
+        }
+    }
+
+    private func moveToNextQuestion() {
+        if currentIndex < questionCount - 1 {
+            currentIndex += 1
+        }
+    }
+
     private func shareQuestion() {
         guard let question = currentQuestion else { return }
-        let questionText = question.text
-        let activityVC = UIActivityViewController(activityItems: [questionText], applicationActivities: nil)
-        
+        let activityVC = UIActivityViewController(activityItems: [question.text], applicationActivities: nil)
         let allScenes = UIApplication.shared.connectedScenes
         let scene = allScenes.first { $0.activationState == .foregroundActive }
-
         if let windowScene = scene as? UIWindowScene {
-            windowScene.windows.first?.rootViewController?.present(activityVC, animated: true, completion: nil)
+            windowScene.windows.first?.rootViewController?.present(activityVC, animated: true)
         }
     }
 
@@ -139,6 +178,11 @@ struct QuestionView: View {
         } else {
             favoritesManager.addFavorite(question)
         }
+    }
+
+    private func randomizeQuestions() {
+        randomizedQuestions = questions.shuffled()
+        currentIndex = 0
     }
 
     init(category: Category, questions: [Question]) {

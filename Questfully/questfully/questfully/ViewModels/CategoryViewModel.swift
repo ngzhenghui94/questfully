@@ -74,6 +74,11 @@ class CategoryViewModel: ObservableObject {
         recalculateViewedCount()
     }
 
+    var focusedCategoryQuestionCount: Int? {
+        guard let categoryID = focusedCategoryID else { return nil }
+        return questionCounts[categoryID] ?? stats?.questionsPerCategory[categoryID]
+    }
+
     private func recalculateViewedCount() {
         guard let stats = stats else {
             viewedCount = 0
