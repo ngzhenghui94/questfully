@@ -5,6 +5,7 @@ struct QuestionView: View {
     let questions: [Question]
     
     @State private var currentIndex = 0
+    @State private var randomizedQuestions: [Question] = []
     @EnvironmentObject var favoritesManager: FavoritesManager
     @Environment(\.presentationMode) var presentationMode
 
@@ -29,10 +30,14 @@ struct QuestionView: View {
                             .font(.title2)
                     }
                     Button(action: toggleFavorite) {
-                        Image(systemName: favoritesManager.isFavorited(questions[currentIndex]) ? "heart.fill" : "heart")
-                            .foregroundColor(favoritesManager.isFavorited(questions[currentIndex]) ? .red : .white)
-                            .font(.title2)
+                        if let question = currentQuestion {
+                            Image(systemName: favoritesManager.isFavorited(question) ? "heart.fill" : "heart")
+                                .foregroundColor(favoritesManager.isFavorited(question) ? .red : .white)
+                                .font(.title2)
+                        }
                     }
+                    .disabled(currentQuestion == nil)
+                    .opacity(currentQuestion == nil ? 0 : 1)
                     .padding(.leading)
                 }
                 .padding()
@@ -40,8 +45,8 @@ struct QuestionView: View {
                 Spacer()
 
                 // Question Text
-                if !questions.isEmpty {
-                    Text(questions[currentIndex].text)
+                if let question = currentQuestion {
+                    Text(question.text)
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
@@ -56,15 +61,15 @@ struct QuestionView: View {
                 Spacer()
 
                 // Footer
-                if !questions.isEmpty {
+                if let question = currentQuestion {
                     VStack {
                         // Progress Bar
-                        ProgressView(value: Double(currentIndex + 1), total: Double(questions.count))
+                        ProgressView(value: Double(currentIndex + 1), total: Double(questionCount))
                             .progressViewStyle(LinearProgressViewStyle(tint: .white))
                             .padding()
 
                         // Navigation
-                        HStack {
+                        HStack(alignment: .center) {
                             Button(action: {
                                 if currentIndex > 0 {
                                     currentIndex -= 1
@@ -72,25 +77,28 @@ struct QuestionView: View {
                             }) {
                                 Text("Previous")
                                     .foregroundColor(.white)
+                                    .frame(width: 80, alignment: .leading)
                             }
                             .disabled(currentIndex == 0)
 
-                            Spacer()
-                            
-                            Text("\(currentIndex + 1) of \(questions.count)")
-                                .foregroundColor(.white)
+                            Spacer(minLength: 0)
 
-                            Spacer()
+                            Text("\(currentIndex + 1) of \(questionCount)")
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity, alignment: .center)
+
+                            Spacer(minLength: 0)
 
                             Button(action: {
-                                if currentIndex < questions.count - 1 {
+                                if currentIndex < questionCount - 1 {
                                     currentIndex += 1
                                 }
                             }) {
                                 Text("Next")
                                     .foregroundColor(.white)
+                                    .frame(width: 80, alignment: .trailing)
                             }
-                            .disabled(currentIndex == questions.count - 1)
+                            .disabled(currentIndex == questionCount - 1)
                         }
                         .padding()
                     }
@@ -100,9 +108,20 @@ struct QuestionView: View {
         .navigationBarHidden(true)
     }
     
+    private var currentQuestion: Question? {
+        guard !randomizedQuestions.isEmpty else {
+            return questions.isEmpty ? nil : questions[currentIndex]
+        }
+        return randomizedQuestions[currentIndex]
+    }
+
+    private var questionCount: Int {
+        randomizedQuestions.isEmpty ? questions.count : randomizedQuestions.count
+    }
+
     private func shareQuestion() {
-        guard !questions.isEmpty else { return }
-        let questionText = questions[currentIndex].text
+        guard let question = currentQuestion else { return }
+        let questionText = question.text
         let activityVC = UIActivityViewController(activityItems: [questionText], applicationActivities: nil)
         
         let allScenes = UIApplication.shared.connectedScenes
@@ -114,20 +133,25 @@ struct QuestionView: View {
     }
 
     private func toggleFavorite() {
-        guard !questions.isEmpty else { return }
-        let question = questions[currentIndex]
+        guard let question = currentQuestion else { return }
         if favoritesManager.isFavorited(question) {
             favoritesManager.removeFavorite(question)
         } else {
             favoritesManager.addFavorite(question)
         }
     }
+
+    init(category: Category, questions: [Question]) {
+        self.category = category
+        self.questions = questions
+        self._randomizedQuestions = State(initialValue: questions.shuffled())
+    }
 }
 
 struct QuestionView_Previews: PreviewProvider {
     static var previews: some View {
-        QuestionView(category: Category(id: "1", name: "Deep Questions", color: "8E44AD"),
-                     questions: [Question(id: "q1", text: "What is a belief you hold with which many people disagree?", categoryId: "1")])
+        QuestionView(category: Category(id: UUID(), name: "Deep Questions", color: "8E44AD"),
+                     questions: [Question(id: UUID(), text: "What is a belief you hold with which many people disagree?", categoryId: UUID())])
             .environmentObject(FavoritesManager())
     }
 }

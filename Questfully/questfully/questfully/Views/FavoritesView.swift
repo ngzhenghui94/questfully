@@ -1,16 +1,16 @@
 import SwiftUI
 
 struct FavoritesView: View {
-    @Binding var favoritedQuestions: [Question]
+    @EnvironmentObject var favoritesManager: FavoritesManager
 
     var body: some View {
         NavigationView {
             VStack {
-                if favoritedQuestions.isEmpty {
+                if favoritesManager.favoritedQuestions.isEmpty {
                     Text("No favorited questions yet.")
                         .foregroundColor(.gray)
                 } else {
-                    List(favoritedQuestions) { question in
+                    List(favoritesManager.favoritedQuestions) { question in
                         Text(question.text)
                     }
                 }

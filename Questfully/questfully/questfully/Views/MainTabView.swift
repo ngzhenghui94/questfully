@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MainTabView: View {
-    @ObservedObject var favoritesManager: FavoritesManager
+    @EnvironmentObject var favoritesManager: FavoritesManager
 
     var body: some View {
         TabView {
@@ -11,7 +11,7 @@ struct MainTabView: View {
                     Text("Categories")
                 }
 
-            FavoritesView(favoritedQuestions: $favoritesManager.favoritedQuestions)
+            FavoritesView()
                 .tabItem {
                     Image(systemName: "heart.fill")
                     Text("Favorites")
