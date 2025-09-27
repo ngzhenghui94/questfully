@@ -1,7 +1,7 @@
 import Foundation
 
-struct Question: Identifiable, Codable {
-    let id: String
+struct Question: Identifiable, Codable, Hashable {
+    let id: UUID
     let text: String
-    let categoryId: String
+    let categoryId: UUID
 }

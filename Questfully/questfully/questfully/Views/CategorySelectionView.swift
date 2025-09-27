@@ -13,8 +13,10 @@ struct CategorySelectionView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 20) {
                     ForEach(viewModel.categories) { category in
-                        NavigationLink(destination: QuestionView(category: category, questions: viewModel.questions[category.id] ?? [])) {
-                            CategoryCardView(category: category)
+                        if let categoryID = category.id {
+                            NavigationLink(destination: QuestionView(category: category, questions: viewModel.questions[categoryID] ?? [])) {
+                                CategoryCardView(category: category)
+                            }
                         }
                     }
                 }
