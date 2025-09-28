@@ -30,17 +30,15 @@ final class JourneyThemesViewModel: ObservableObject {
     }
 
     func refreshProgress(for deviceId: String, userId: String? = nil) async {
-        guard let sanitizedDeviceId = sanitizedDeviceId(deviceId), !themes.isEmpty else { return }
+        guard !themes.isEmpty else { return }
+        let normalizedId = normalizedDeviceId(deviceId)
         for theme in themes {
-            await loadProgress(for: theme, deviceId: sanitizedDeviceId, userId: userId)
+            await loadProgress(for: theme, deviceId: normalizedId, userId: userId)
         }
     }
 
     func loadProgress(for theme: JourneyTheme, deviceId: String, userId: String? = nil) async {
-        guard let sanitizedDeviceId = sanitizedDeviceId(deviceId) else {
-            print("JourneyThemesViewModel: Skipping progress load because deviceId is empty")
-            return
-        }
+        let sanitizedDeviceId = normalizedDeviceId(deviceId)
         let result = await dataStore.apiClient.fetchJourneyProgress(slug: theme.slug,
                                                                     deviceId: sanitizedDeviceId,
                                                                     userId: userId)
@@ -63,11 +61,7 @@ final class JourneyThemesViewModel: ObservableObject {
                         userId: String? = nil,
                         currentStep: Int,
                         completed: Bool) async {
-        guard let sanitizedDeviceId = sanitizedDeviceId(deviceId) else {
-            print("JourneyThemesViewModel: Skipping progress update because deviceId is empty")
-            return
-        }
-
+        let sanitizedDeviceId = normalizedDeviceId(deviceId)
         let payload = APIService.JourneyProgressUpdateDTO(deviceId: sanitizedDeviceId,
                                                           userId: userId,
                                                           currentStep: currentStep,
@@ -144,9 +138,21 @@ final class JourneyThemesViewModel: ObservableObject {
         }
     }
 
-    private func sanitizedDeviceId(_ deviceId: String) -> String? {
+    private func normalizedDeviceId(_ deviceId: String) -> String {
         let trimmed = deviceId.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
+        if !trimmed.isEmpty {
+            return trimmed
+        }
+
+        let defaults = UserDefaults.standard
+        let key = "deviceIdentifier"
+        if let existing = defaults.string(forKey: key), !existing.isEmpty {
+            return existing
+        }
+
+        let generated = UUID().uuidString
+        defaults.set(generated, forKey: key)
+        return generated
     }
 }
 
