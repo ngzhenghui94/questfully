@@ -1153,6 +1153,204 @@ const createSimpleQuestions = () => {
   return toUniqueCount("Simple", questions);
 };
 
+const createHowManyQuestions = () => {
+  const questions = [
+    "How many vacations do you take per year?",
+    "How many siblings do you have?",
+    "How many people live in your home right now?",
+    "How many close friends do you talk to each week?",
+    "How many books are you reading at the moment?",
+    "How many hours of sleep feel perfect to you?",
+    "How many cups of coffee or tea do you enjoy in a day?",
+    "How many playlists have you made this year?",
+    "How many photos do you take on a typical trip?",
+    "How many goals are you focusing on this season?",
+    "How many chores did you finish today?",
+    "How many steps do you try to hit on an average day?",
+    "How many hobbies are you balancing right now?",
+    "How many shows are on your watch list?",
+    "How many memories from last month stand out?",
+    "How many holidays do you host with family or friends?",
+    "How many meals do you cook at home each week?",
+    "How many traditions do you want to keep alive?",
+    "How many neighbors do you know by name?",
+    "How many local spots feel like a second home to you?",
+  ];
+
+  const routines = [
+    "work meetings fill your calendar",
+    "times you hit snooze",
+    "emails you clear before noon",
+    "walks you take to reset",
+    "water breaks you aim for",
+    "breaks you schedule during the workday",
+    "texts you send to check in on loved ones",
+    "gratitude moments you jot down",
+    "quiet minutes you carve out for yourself",
+    "moments you laugh in a typical day",
+    "times you cook the same favorite meal",
+    "errands you usually run on weekends",
+    "times you reorganize your space each year",
+    "times you call family members every week",
+    "stretch sessions you squeeze into your day",
+    "times you pause for prayer or reflection",
+    "shared meals you enjoy with others each week",
+    "times you open a window for fresh air",
+    "pages you read before bed",
+    "alarms you set to stay on track",
+    "video calls you plan each month",
+    "screen-free hours you try to keep",
+    "times you pack a lunch for yourself",
+    "days you work remotely in a month",
+    "moments you celebrate small wins",
+  ];
+  routines.forEach((topic) => {
+    questions.push(`How many ${topic}?`);
+  });
+
+  const experiences = [
+    "new places you want to visit this year",
+    "recipes you hope to learn soon",
+    "podcasts you keep up with",
+    "creative projects you have in motion",
+    "weekend getaways you would like to plan",
+    "concerts or events you want to attend",
+    "books on your must-read list",
+    "skills you are trying to pick up",
+    "times you have moved homes",
+    "languages you would like to practice",
+    "times you have switched careers or roles",
+    "volunteer events you join yearly",
+    "letters or cards you send to friends",
+    "traditions you would like to start",
+    "moments this year that surprised you",
+    "fairs or festivals you try to visit",
+    "projects you finish in a typical month",
+    "classes or workshops you want to take",
+    "times you have changed your daily routine",
+    "moments that made you proud this quarter",
+    "road trips you took last year",
+    "vacation ideas you keep in your notes app",
+    "new foods you sampled recently",
+    "times you have redecorated your space",
+    "milestones you celebrated recently",
+  ];
+  experiences.forEach((topic) => {
+    questions.push(`How many ${topic}?`);
+  });
+
+  const connections = [
+    "people you send holiday cards to",
+    "mentors you turn to for advice",
+    "group chats you follow",
+    "people who share your hobbies",
+    "coworkers you collaborate with daily",
+    "family traditions you cherish",
+    "friends you have known since childhood",
+    "people you met through volunteering",
+    "celebrations you plan with friends each year",
+    "gatherings you host per season",
+    "calls you make to relatives each month",
+    "support systems you lean on",
+    "people who ask about your day",
+    "moments you share updates with loved ones",
+    "times you send encouragement notes",
+    "community groups you are part of",
+    "neighbors you see during evening walks",
+    "team activities you enjoy",
+    "family recipes you keep in rotation",
+    "people you reach out to during tough times",
+    "friendships that started in unexpected places",
+    "connections you maintain across cities",
+    "events you plan with extended family",
+    "people you cheer for at their milestones",
+    "traditions you attend with your community",
+  ];
+  connections.forEach((topic) => {
+    questions.push(`How many ${topic}?`);
+  });
+
+  const practical = [
+    "plants you care for",
+    "projects waiting on your to-do list",
+    "apps you open every morning",
+    "tabs you keep open on your browser",
+    "bags you carry around daily",
+    "credit cards you actually use",
+    "subscriptions you still enjoy",
+    "membership cards you keep in your wallet",
+    "smart devices you rely on",
+    "alarms you have set right now",
+    "keys on your keychain",
+    "pairs of shoes you wear regularly",
+    "jackets you rotate each season",
+    "mugs you reach for most",
+    "notes you keep on your phone",
+    "things you currently have on loan",
+    "loyalty programs you are signed up for",
+    "appointments you have coming up",
+    "packages you expect this month",
+    "projects you track in your planner",
+    "items you are saving to buy",
+    "backup plans you usually make",
+    "journals or notebooks you use",
+    "photos you have printed around your home",
+    "emergency contacts saved in your phone",
+  ];
+  practical.forEach((topic) => {
+    questions.push(`How many ${topic}?`);
+  });
+
+  const reflections = [
+    "memories from childhood you revisit",
+    "habits you are trying to build",
+    "moments you felt grateful today",
+    "promises you are keeping to yourself",
+    "times you paused to pray this week",
+    "lessons you learned in the past year",
+    "accomplishments you are celebrating",
+    "risks you want to take this year",
+    "habits you want to let go of",
+    "dreams you are actively pursuing",
+    "times you journaled this month",
+    "moments you smiled during the workday",
+    "new routines you tested this season",
+    "acts of kindness you received recently",
+    "changes you noticed in yourself",
+    "moments you felt proud this week",
+    "questions you are still exploring",
+    "ways you find peace after a long day",
+    "reminders you set for encouragement",
+    "things you are grateful for right now",
+    "times you encouraged someone else",
+    "ideas you want to brainstorm soon",
+    "lessons you want to share with others",
+    "moments that made you laugh today",
+    "times you paused just to breathe",
+  ];
+  reflections.forEach((topic) => {
+    questions.push(`How many ${topic}?`);
+  });
+
+  const aspirations = [
+    "dream trips you want to experience in your lifetime",
+    "traditions you hope to start with future generations",
+    "ideas you have saved for rainy days",
+    "milestones you are planning over the next five years",
+    "books you want to gift to someone you love",
+    "changes you are preparing to make this season",
+    "ways you plan to give back this year",
+    "lessons you want to remember from this month",
+    "conversations you hope to finish soon",
+    "moments you want to capture in photos this year",
+  ];
+  aspirations.forEach((topic) => {
+    questions.push(`How many ${topic}?`);
+  });
+
+  return toUniqueCount("How Many", questions);
+};
+
 const createData = () => [
   {
     category: { name: "Deep Questions", color: "8E44AD" },
@@ -1178,12 +1376,178 @@ const createData = () => [
     category: { name: "Simple", color: "1ABC9C" },
     questions: createSimpleQuestions(),
   },
+  {
+    category: { name: "How Many", color: "9B59B6" },
+    questions: createHowManyQuestions(),
+  },
 ];
+
+const seedThemes = async (client, categoryMap, questionMapByCategory) => {
+  const themes = [
+    {
+      slug: "first-5-dates",
+      title: "First 5 Dates",
+      subtitle: "Build connection one date at a time",
+      description: "Guided prompts to help you go deeper with each date night.",
+      icon: "heart.circle.fill",
+      steps: [
+        { title: "Date 1", reflection: "Plan a small surprise based on what you learn tonight." },
+        { title: "Date 2", reflection: "Write down a moment you want to remember together." },
+        { title: "Date 3", reflection: "Share one thing you appreciate this week." },
+        { title: "Date 4", reflection: "Pick a ritual you’d like to keep doing." },
+        { title: "Date 5", reflection: "Celebrate what you’ve discovered as a pair." },
+      ],
+      category: "Relationships",
+    },
+    {
+      slug: "roommate-reset",
+      title: "Roommate Reset",
+      subtitle: "Refresh your living harmony",
+      description: "Weekly check-ins to align on expectations, routines, and connection.",
+      icon: "house.fill",
+      steps: [
+        { title: "Reset Session 1", reflection: "List one shared space win you noticed." },
+        { title: "Reset Session 2", reflection: "Name one new rhythm to try next week." },
+        { title: "Reset Session 3", reflection: "Decide how you’ll celebrate teamwork." },
+        { title: "Reset Session 4", reflection: "Plan a small moment of fun together." },
+        { title: "Reset Session 5", reflection: "Check in on how everyone is feeling." },
+        { title: "Reset Session 6", reflection: "Capture any agreements you want to revisit." },
+      ],
+      category: "Simple",
+    },
+    {
+      slug: "parent-teen-dialogues",
+      title: "Parent & Teen Dialogues",
+      subtitle: "Spark meaningful communication at home",
+      description: "Conversation starters designed to build empathy and understanding.",
+      icon: "person.2.fill",
+      steps: [
+        { title: "Dialogue 1", reflection: "Share one highlight from this chat." },
+        { title: "Dialogue 2", reflection: "Note something new you learned today." },
+        { title: "Dialogue 3", reflection: "Plan a follow-up activity together." },
+        { title: "Dialogue 4", reflection: "Talk about upcoming hopes or worries." },
+        { title: "Dialogue 5", reflection: "Celebrate growth you’ve both seen." },
+        { title: "Dialogue 6", reflection: "Agree on the next check-in date." },
+      ],
+      category: "Personal Growth",
+    },
+    {
+      slug: "know-a-new-person",
+      title: "Get to Know a New Person",
+      subtitle: "Ease into a new connection",
+      description: "A three-part path from introductions to light next steps.",
+      icon: "person.crop.circle.badge.questionmark",
+      steps: [
+        {
+          title: "Discover",
+          reflection: "Swap origin stories, share one unexpected fact, and trade a favorite link to keep the chat going.",
+        },
+        {
+          title: "Deepen",
+          reflection: "Explore current passions and recent challenges, then plan a casual catch-up to exchange recommendations.",
+        },
+        {
+          title: "Celebrate",
+          reflection: "Call out something you appreciated learning and suggest a simple next step like meeting for coffee.",
+        },
+      ],
+      category: "Relationships",
+    },
+    {
+      slug: "know-a-new-friend",
+      title: "Get to Know a New Friend",
+      subtitle: "Turn new friendships into shared traditions",
+      description: "Guided prompts to move from first impressions to meaningful rituals.",
+      icon: "person.2.circle",
+      steps: [
+        {
+          title: "Discover",
+          reflection: "Revisit how you met, compare first impressions, and capture the story in a shared note or message.",
+        },
+        {
+          title: "Deepen",
+          reflection: "Swap highlights from the last month, talk about current focuses, and plan an experience around a shared interest.",
+        },
+        {
+          title: "Celebrate",
+          reflection: "Create a small tradition together and express support for an upcoming milestone or goal.",
+        },
+      ],
+      category: "Relationships",
+    },
+    {
+      slug: "know-a-new-date",
+      title: "Get to Know a New Date",
+      subtitle: "Grow chemistry with clarity",
+      description: "Stages that move a date from small talk to aligned next steps.",
+      icon: "heart.circle.fill",
+      steps: [
+        {
+          title: "Discover",
+          reflection: "Share a formative place or person and compare ideal weekends, noting any overlapping interests.",
+        },
+        {
+          title: "Deepen",
+          reflection: "Talk about future chapters, growth goals, and expectations while checking in on alignment.",
+        },
+        {
+          title: "Celebrate",
+          reflection: "Name a memorable moment from the date and co-design the next experience you want to share.",
+        },
+      ],
+      category: "Relationships",
+    },
+  ];
+
+  for (const theme of themes) {
+    const categoryId = categoryMap[theme.category];
+    if (!categoryId) {
+      console.warn(`Skipping theme ${theme.slug}; category ${theme.category} missing.`);
+      continue;
+    }
+
+    const questionList = questionMapByCategory[categoryId] || [];
+    const themeQuestions = questionList.slice(0, theme.steps.length);
+    if (themeQuestions.length < theme.steps.length) {
+      console.warn(`Not enough questions for theme ${theme.slug}; found ${themeQuestions.length}.`);
+      continue;
+    }
+
+    const themeResult = await client.query(
+      `INSERT INTO journey_themes (slug, title, subtitle, description, icon)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (slug) DO UPDATE SET
+         title = EXCLUDED.title,
+         subtitle = EXCLUDED.subtitle,
+         description = EXCLUDED.description,
+         icon = EXCLUDED.icon,
+         updated_at = NOW()
+       RETURNING id`,
+      [theme.slug, theme.title, theme.subtitle, theme.description, theme.icon]
+    );
+
+    const themeId = themeResult.rows[0].id;
+
+    await client.query('DELETE FROM journey_theme_steps WHERE theme_id = $1', [themeId]);
+
+    for (let index = 0; index < theme.steps.length; index++) {
+      const step = theme.steps[index];
+      const question = themeQuestions[index];
+      await client.query(
+        `INSERT INTO journey_theme_steps (theme_id, question_id, step_order, title, reflection)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [themeId, question.id, index + 1, step.title, step.reflection]
+      );
+    }
+  }
+};
 
 const insertData = async () => {
   const client = await pool.connect();
   try {
     const data = createData();
+    const categoryMap = {};
+    const questionMapByCategory = {};
 
     for (const item of data) {
       const result = await client.query(
@@ -1191,21 +1555,27 @@ const insertData = async () => {
         [item.category.name, item.category.color],
       );
       const categoryId = result.rows[0].id;
+      categoryMap[item.category.name] = categoryId;
+
+      questionMapByCategory[categoryId] = [];
 
       for (const question of item.questions) {
-        await client.query(
-          "INSERT INTO questions (text, category_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+        const questionResult = await client.query(
+          "INSERT INTO questions (text, category_id) VALUES ($1, $2) ON CONFLICT (text) DO UPDATE SET category_id = EXCLUDED.category_id RETURNING id",
           [question, categoryId],
         );
+        questionMapByCategory[categoryId].push({ id: questionResult.rows[0].id, text: question });
       }
     }
+
+    await seedThemes(client, categoryMap, questionMapByCategory);
 
     const summary = data.map(({ category, questions }) => ({
       category: category.name,
       questions: questions.length,
     }));
     console.table(summary);
-    console.log("Data inserted successfully.");
+    console.log("Data inserted successfully, including journey themes.");
   } catch (err) {
     console.error("Error inserting data:", err);
   } finally {
@@ -1231,4 +1601,5 @@ module.exports = {
   createPersonalGrowthQuestions,
   createRelationshipQuestions,
   createSimpleQuestions,
+  createHowManyQuestions,
 };

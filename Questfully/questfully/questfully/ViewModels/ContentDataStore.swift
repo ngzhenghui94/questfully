@@ -15,6 +15,10 @@ final class ContentDataStore: ObservableObject {
         loadCachedData()
     }
 
+    var apiClient: APIService {
+        apiService
+    }
+
     func refreshContent() async {
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.fetchCategoriesAndQuestions() }

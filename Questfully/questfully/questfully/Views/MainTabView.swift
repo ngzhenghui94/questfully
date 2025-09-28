@@ -25,11 +25,11 @@ struct MainTabView: View {
                 }
                 .tag(Tab.favorites.rawValue)
             
-            // Random / Deck tab gated behind premium
+            // Journey Themes tab gated behind premium
             randomTabContent
                 .tabItem {
-                    Image(systemName: "rectangle.stack.fill")
-                    Text("Decks")
+                    Image(systemName: "sparkles")
+                    Text("Themes")
                 }
                 .tag(Tab.random.rawValue)
             
@@ -78,10 +78,10 @@ struct MainTabView: View {
     private var randomTabContent: some View {
         Group {
             if subscriptionManager.isPremium {
-                Text("Deck View")
+                JourneyThemesView()
             } else {
-                PremiumUnlockView(title: "Random Questions are Premium",
-                                  message: "Upgrade to unlock random questions and more!",
+                PremiumUnlockView(title: "Journey Themes are Premium",
+                                  message: "Upgrade to unlock curated conversation journeys and more!",
                                   actionTitle: "Unlock Premium") {
                     pendingTabSelection = Tab.random.rawValue
                     showPaywall = true

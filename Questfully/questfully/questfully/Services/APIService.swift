@@ -220,6 +220,86 @@ class APIService {
         }
     }
 
+    // MARK: - Journey Themes
+
+    func fetchJourneyThemes(completion: @escaping (Result<[JourneyThemeDTO], Error>) -> Void) {
+        guard let url = URL(string: "\(baseURL)/journey-themes") else {
+            completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
+            return
+        }
+
+        let request = buildRequest(url: url)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let data = data else {
+                completion(.failure(NSError(domain: "No data", code: -1, userInfo: nil)))
+                return
+            }
+
+            do {
+                let themes = try JSONDecoder().decode([JourneyThemeDTO].self, from: data)
+                completion(.success(themes))
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+
+    func fetchJourneyThemes() async -> Result<[JourneyThemeDTO], Error> {
+        await withCheckedContinuation { continuation in
+            fetchJourneyThemes { result in
+                continuation.resume(returning: result)
+            }
+        }
+    }
+
+    func fetchJourneyProgress(slug: String, deviceId: String, userId: String? = nil) async -> Result<JourneyProgressDTO, Error> {
+        var components = URLComponents(string: "\(baseURL)/journey-themes/\(slug)/progress")
+        var queryItems = [URLQueryItem(name: "deviceId", value: deviceId)]
+        if let userId = userId {
+            queryItems.append(URLQueryItem(name: "userId", value: userId))
+        }
+        components?.queryItems = queryItems
+
+        guard let url = components?.url else {
+            return .failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil))
+        }
+
+        var request = buildRequest(url: url)
+        request.httpMethod = "GET"
+
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let progress = try decoder.decode(JourneyProgressDTO.self, from: data)
+            return .success(progress)
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    func upsertJourneyProgress(slug: String, payload: JourneyProgressUpdateDTO) async -> Result<JourneyProgressDTO, Error> {
+        guard let url = URL(string: "\(baseURL)/journey-themes/\(slug)/progress") else {
+            return .failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil))
+        }
+
+        var request = buildRequest(url: url)
+        request.httpMethod = "POST"
+        request.httpBody = try? encoder.encode(payload)
+
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let progress = try decoder.decode(JourneyProgressDTO.self, from: data)
+            return .success(progress)
+        } catch {
+            return .failure(error)
+        }
+    }
+
     func fetchQuestionCount(for categoryID: UUID, completion: @escaping (Result<Int, Error>) -> Void) {
         guard let url = URL(string: "\(baseURL)/categories/\(categoryID)/count") else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
@@ -387,5 +467,38 @@ class APIService {
         let sessionToken: String
         let expiresAt: Date
         let displayName: String?
+    }
+
+    struct JourneyThemeDTO: Codable {
+        let id: UUID
+        let slug: String
+        let title: String
+        let subtitle: String
+        let description: String
+        let icon: String
+        let steps: [JourneyThemeStepDTO]
+    }
+
+    struct JourneyThemeStepDTO: Codable {
+        let id: UUID
+        let title: String
+        let reflection: String?
+        let question: Question
+        let order: Int
+    }
+
+    struct JourneyProgressDTO: Codable {
+        let id: UUID?
+        let themeId: UUID
+        let currentStep: Int
+        let completed: Bool
+        let updatedAt: Date?
+    }
+
+    struct JourneyProgressUpdateDTO: Codable {
+        let deviceId: String
+        let userId: String?
+        let currentStep: Int
+        let completed: Bool
     }
 }

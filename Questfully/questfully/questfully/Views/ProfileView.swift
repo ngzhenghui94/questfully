@@ -142,9 +142,12 @@ struct ProfileView: View {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
 
-            statRow(icon: "gauge", title: "Daily Quota", value: "\(subscriptionManager.questionsConsumedToday)/\(subscriptionManager.dailyQuestionLimit)")
-
-            ProgressView(value: Double(subscriptionManager.questionsConsumedToday), total: Double(subscriptionManager.dailyQuestionLimit))
+            if subscriptionManager.dailyQuestionLimit == Int.max {
+                statRow(icon: "gauge", title: "Daily Quota", value: "Unlimited (Debug)")
+            } else {
+                statRow(icon: "gauge", title: "Daily Quota", value: "\(subscriptionManager.questionsConsumedToday)/\(subscriptionManager.dailyQuestionLimit)")
+                ProgressView(value: Double(subscriptionManager.questionsConsumedToday), total: Double(subscriptionManager.dailyQuestionLimit))
+            }
         }
     }
 

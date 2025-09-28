@@ -13,11 +13,14 @@ struct questfullyApp: App {
     @StateObject private var authManager = AuthManager()
     @StateObject private var subscriptionManager: SubscriptionManager
     @StateObject private var categoryViewModel: CategoryViewModel
+    @StateObject private var journeyThemesViewModel: JourneyThemesViewModel
 
     init() {
         let sharedSubscriptionManager = SubscriptionManager()
+        let sharedDataStore = ContentDataStore()
         _subscriptionManager = StateObject(wrappedValue: sharedSubscriptionManager)
-        _categoryViewModel = StateObject(wrappedValue: CategoryViewModel(subscriptionManager: sharedSubscriptionManager))
+        _categoryViewModel = StateObject(wrappedValue: CategoryViewModel(dataStore: sharedDataStore, subscriptionManager: sharedSubscriptionManager))
+        _journeyThemesViewModel = StateObject(wrappedValue: JourneyThemesViewModel(dataStore: sharedDataStore))
     }
 
     var body: some Scene {
@@ -27,6 +30,7 @@ struct questfullyApp: App {
                 .environmentObject(authManager)
                 .environmentObject(subscriptionManager)
                 .environmentObject(categoryViewModel)
+                .environmentObject(journeyThemesViewModel)
         }
     }
 }

@@ -47,6 +47,72 @@ CREATE INDEX IF NOT EXISTS idx_questions_category_id ON questions(category_id);
 
 
 -- -----------------------------------------------------
+-- Table: journey_themes
+-- -----------------------------------------------------
+-- Stores curated conversation journeys.
+--
+CREATE TABLE IF NOT EXISTS journey_themes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  subtitle TEXT NOT NULL,
+  description TEXT NOT NULL,
+  icon TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+COMMENT ON TABLE journey_themes IS 'Curated journey themes composed of sequential steps.';
+
+
+-- -----------------------------------------------------
+-- Table: journey_theme_steps
+-- -----------------------------------------------------
+-- Stores ordered prompts associated with a journey theme.
+--
+CREATE TABLE IF NOT EXISTS journey_theme_steps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  theme_id UUID NOT NULL REFERENCES journey_themes(id) ON DELETE CASCADE,
+  question_id UUID NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+  step_order INT NOT NULL,
+  title TEXT NOT NULL,
+  reflection TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+  CONSTRAINT uq_theme_step_order UNIQUE(theme_id, step_order)
+);
+
+CREATE INDEX IF NOT EXISTS idx_journey_theme_steps_theme_id ON journey_theme_steps(theme_id);
+CREATE INDEX IF NOT EXISTS idx_journey_theme_steps_question_id ON journey_theme_steps(question_id);
+
+COMMENT ON TABLE journey_theme_steps IS 'Ordered list of steps/questions that make up a journey theme.';
+
+
+-- -----------------------------------------------------
+-- Table: journey_theme_progress
+-- -----------------------------------------------------
+-- Tracks journey progress per device (optionally associated with a user).
+--
+CREATE TABLE IF NOT EXISTS journey_theme_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  theme_id UUID NOT NULL REFERENCES journey_themes(id) ON DELETE CASCADE,
+  device_id TEXT NOT NULL,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  current_step INT NOT NULL DEFAULT 1,
+  completed BOOLEAN NOT NULL DEFAULT FALSE,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+  CONSTRAINT uq_theme_device UNIQUE(theme_id, device_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_journey_theme_progress_device ON journey_theme_progress(device_id);
+CREATE INDEX IF NOT EXISTS idx_journey_theme_progress_user ON journey_theme_progress(user_id);
+
+COMMENT ON TABLE journey_theme_progress IS 'Stores the current step and completion state for a journey theme per device/user.';
+
+
+-- -----------------------------------------------------
 -- Table: users
 -- -----------------------------------------------------
 -- Stores application users identified via Sign in with Apple.

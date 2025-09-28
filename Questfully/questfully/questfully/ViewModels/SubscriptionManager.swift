@@ -23,7 +23,7 @@ final class SubscriptionManager: ObservableObject {
     @Published private(set) var totalQuestionsViewed: Int = 0
     @Published private(set) var availableProducts: [Product] = []
 
-    let dailyQuestionLimit = 15
+    let dailyQuestionLimit: Int
 
     private let userDefaults: UserDefaults
     private let calendar: Calendar
@@ -35,14 +35,24 @@ final class SubscriptionManager: ObservableObject {
     init(userDefaults: UserDefaults = .standard, calendar: Calendar = .current) {
         self.userDefaults = userDefaults
         self.calendar = calendar
+
+        #if DEBUG
+        self.dailyQuestionLimit = Int.max
+        self.isPremium = true
+        #else
+        self.dailyQuestionLimit = 5
+        #endif
+
         refreshDailyQuotaIfNeeded()
         totalQuestionsViewed = userDefaults.integer(forKey: totalCountKey)
 
+        #if !DEBUG
         Task {
             await loadProducts()
             await listenForTransactions()
             await updatePremiumStatusFromEntitlements()
         }
+        #endif
     }
 
     deinit {
