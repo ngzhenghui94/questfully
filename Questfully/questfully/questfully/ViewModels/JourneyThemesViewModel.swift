@@ -30,15 +30,19 @@ final class JourneyThemesViewModel: ObservableObject {
     }
 
     func refreshProgress(for deviceId: String, userId: String? = nil) async {
-        guard !themes.isEmpty else { return }
+        guard let sanitizedDeviceId = sanitizedDeviceId(deviceId), !themes.isEmpty else { return }
         for theme in themes {
-            await loadProgress(for: theme, deviceId: deviceId, userId: userId)
+            await loadProgress(for: theme, deviceId: sanitizedDeviceId, userId: userId)
         }
     }
 
     func loadProgress(for theme: JourneyTheme, deviceId: String, userId: String? = nil) async {
+        guard let sanitizedDeviceId = sanitizedDeviceId(deviceId) else {
+            print("JourneyThemesViewModel: Skipping progress load because deviceId is empty")
+            return
+        }
         let result = await dataStore.apiClient.fetchJourneyProgress(slug: theme.slug,
-                                                                    deviceId: deviceId,
+                                                                    deviceId: sanitizedDeviceId,
                                                                     userId: userId)
         switch result {
         case .success(let dto):
@@ -59,7 +63,12 @@ final class JourneyThemesViewModel: ObservableObject {
                         userId: String? = nil,
                         currentStep: Int,
                         completed: Bool) async {
-        let payload = APIService.JourneyProgressUpdateDTO(deviceId: deviceId,
+        guard let sanitizedDeviceId = sanitizedDeviceId(deviceId) else {
+            print("JourneyThemesViewModel: Skipping progress update because deviceId is empty")
+            return
+        }
+
+        let payload = APIService.JourneyProgressUpdateDTO(deviceId: sanitizedDeviceId,
                                                           userId: userId,
                                                           currentStep: currentStep,
                                                           completed: completed)
@@ -73,7 +82,7 @@ final class JourneyThemesViewModel: ObservableObject {
                                                               updatedAt: Date())
         }
 
-        let result = await dataStore.apiClient.upsertJourneyProgress(slug: theme.slug, payload: payload)
+    let result = await dataStore.apiClient.upsertJourneyProgress(slug: theme.slug, payload: payload)
         switch result {
         case .success(let dto):
             await MainActor.run {
@@ -133,6 +142,11 @@ final class JourneyThemesViewModel: ObservableObject {
                                  icon: dto.icon,
                                  steps: steps)
         }
+    }
+
+    private func sanitizedDeviceId(_ deviceId: String) -> String? {
+        let trimmed = deviceId.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
 
