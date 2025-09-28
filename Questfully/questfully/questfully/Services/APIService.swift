@@ -274,7 +274,11 @@ class APIService {
         request.httpMethod = "GET"
 
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+                return .failure(parseServerError(data: data, response: http))
+            }
+
             let progress = try decoder.decode(JourneyProgressDTO.self, from: data)
             return .success(progress)
         } catch {
@@ -292,7 +296,11 @@ class APIService {
         request.httpBody = try? encoder.encode(payload)
 
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+                return .failure(parseServerError(data: data, response: http))
+            }
+
             let progress = try decoder.decode(JourneyProgressDTO.self, from: data)
             return .success(progress)
         } catch {
@@ -500,5 +508,21 @@ class APIService {
         let userId: String?
         let currentStep: Int
         let completed: Bool
+    }
+
+    private struct APIErrorResponse: Codable {
+        let error: String
+    }
+
+    private func parseServerError(data: Data, response: HTTPURLResponse) -> Error {
+        if let apiError = try? decoder.decode(APIErrorResponse.self, from: data) {
+            return NSError(domain: "APIService", code: response.statusCode, userInfo: [NSLocalizedDescriptionKey: apiError.error])
+        }
+
+        if let message = String(data: data, encoding: .utf8), !message.isEmpty {
+            return NSError(domain: "APIService", code: response.statusCode, userInfo: [NSLocalizedDescriptionKey: message])
+        }
+
+        return NSError(domain: "APIService", code: response.statusCode, userInfo: [NSLocalizedDescriptionKey: "Unexpected server response (\(response.statusCode))"])
     }
 }
