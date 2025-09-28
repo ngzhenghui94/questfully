@@ -10,13 +10,16 @@ final class CategoryViewModel: ObservableObject {
     @Published var viewedCount: Int = 0
     @Published var totalQuestionsForFocusedCategory: Int = 0
     @Published var focusedCategoryID: UUID? = nil
+    @Published var showPaywall: Bool = false
 
     private let dataStore: ContentDataStore
+    private let subscriptionManager: SubscriptionManager
     private var cancellables: Set<AnyCancellable> = []
 
-    init(dataStore: ContentDataStore? = nil) {
+    init(dataStore: ContentDataStore? = nil, subscriptionManager: SubscriptionManager) {
         let resolvedStore = dataStore ?? ContentDataStore()
         self.dataStore = resolvedStore
+        self.subscriptionManager = subscriptionManager
 
         resolvedStore.$categories
             .receive(on: DispatchQueue.main)
@@ -60,6 +63,19 @@ final class CategoryViewModel: ObservableObject {
     var focusedCategoryQuestionCount: Int? {
         guard let categoryID = focusedCategoryID else { return nil }
         return questionCounts[categoryID] ?? stats?.questionsPerCategory[categoryID]
+    }
+
+    func shouldShowPaywall(for randomMode: Bool) -> Bool {
+        guard randomMode else { return false }
+        let premium = subscriptionManager.isPremium
+        if !premium {
+            showPaywall = true
+        }
+        return !premium
+    }
+
+    func markPaywallHandled() {
+        showPaywall = false
     }
 
     private func recalculateViewedCount() {

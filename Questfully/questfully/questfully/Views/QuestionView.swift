@@ -6,7 +6,9 @@ struct QuestionView: View {
     
     @State private var currentIndex = 0
     @State private var randomizedQuestions: [Question] = []
+    @State private var hasRegisteredCurrentQuestion = false
     @EnvironmentObject var favoritesManager: FavoritesManager
+    @EnvironmentObject private var subscriptionManager: SubscriptionManager
     @Environment(\.presentationMode) var presentationMode
     @GestureState private var dragOffset: CGFloat = 0
 
@@ -26,6 +28,8 @@ struct QuestionView: View {
             }
         }
         .navigationBarHidden(true)
+        .onAppear { ensureQuotaForCurrentQuestion() }
+        .onChange(of: currentIndex) { _, _ in ensureQuotaForCurrentQuestion() }
     }
 
     private var header: some View {
@@ -152,13 +156,19 @@ struct QuestionView: View {
     private func moveToPreviousQuestion() {
         if currentIndex > 0 {
             currentIndex -= 1
+            hasRegisteredCurrentQuestion = false
         }
     }
 
     private func moveToNextQuestion() {
-        if currentIndex < questionCount - 1 {
-            currentIndex += 1
+        guard currentIndex < questionCount - 1 else { return }
+        guard subscriptionManager.canViewAnotherQuestion() else {
+            subscriptionManager.showPaywallAfterQuotaReached()
+            return
         }
+
+        currentIndex += 1
+        hasRegisteredCurrentQuestion = false
     }
 
     private func shareQuestion() {
@@ -181,8 +191,26 @@ struct QuestionView: View {
     }
 
     private func randomizeQuestions() {
+        guard subscriptionManager.canViewAnotherQuestion() else {
+            subscriptionManager.showPaywallAfterQuotaReached()
+            return
+        }
+
         randomizedQuestions = questions.shuffled()
         currentIndex = 0
+        hasRegisteredCurrentQuestion = false
+        ensureQuotaForCurrentQuestion()
+    }
+
+    private func ensureQuotaForCurrentQuestion() {
+        guard !hasRegisteredCurrentQuestion else { return }
+        guard currentQuestion != nil else { return }
+        if subscriptionManager.registerQuestionView() {
+            hasRegisteredCurrentQuestion = true
+        } else {
+            subscriptionManager.showPaywallAfterQuotaReached()
+            presentationMode.wrappedValue.dismiss()
+        }
     }
 
     init(category: Category, questions: [Question]) {

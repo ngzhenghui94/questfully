@@ -8,7 +8,7 @@ class FavoritesManager: ObservableObject {
     private let deviceIdKey = "deviceIdentifier"
     private let apiService = APIService()
 
-    private var deviceId: String {
+    var deviceId: String {
         if let existing = defaults.string(forKey: deviceIdKey) {
             return existing
         }

@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct CategorySelectionView: View {
-    @StateObject private var viewModel = CategoryViewModel()
-    
+    @EnvironmentObject private var viewModel: CategoryViewModel
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -60,7 +60,9 @@ struct CategorySelectionView: View {
 }
 
 struct CategorySelectionView_Previews: PreviewProvider {
+    @MainActor
     static var previews: some View {
         CategorySelectionView()
+            .environmentObject(CategoryViewModel(subscriptionManager: SubscriptionManager()))
     }
 }
