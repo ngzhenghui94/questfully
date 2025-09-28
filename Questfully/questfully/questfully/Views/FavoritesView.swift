@@ -62,7 +62,7 @@ private struct FavoriteQuestionCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Label("Favorited", systemImage: "heart.fill")
+                Label("", systemImage: "heart.fill")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.85))
 
